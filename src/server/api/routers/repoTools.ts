@@ -64,4 +64,17 @@ export const repoToolsRouter = createTRPCRouter({
         throw new Error('An unknown error occurred');
       }
     }),
+  fetchContents: publicProcedure
+    .input(
+      z.object({
+        owner: z.string(),
+        repo: z.string(),
+        fileTypes: z.string().optional(),
+        hideDirs: z.boolean().optional(),
+        path: z.string().optional(),
+      }),
+    )
+    .mutation(() => {
+      return {};
+    }),
 });

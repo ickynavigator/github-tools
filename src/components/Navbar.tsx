@@ -10,7 +10,7 @@ import {
   type CSSObject,
   type NavbarProps,
 } from '@mantine/core';
-import { IconBrandGithub } from '@tabler/icons-react';
+import { IconBook, IconBrandGithub } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
 const useStyles = createStyles(theme => ({
@@ -74,13 +74,27 @@ const useStyles = createStyles(theme => ({
   },
 }));
 
-const data = [
+type ILink = {
+  link: string;
+  label: string;
+  icon: (props: ActionIconProps) => JSX.Element;
+};
+const data: ILink[] = [
   {
     link: 'repoAddCollaborators',
     label: 'Add Github Collaborators',
     icon: (props: ActionIconProps) => (
       <ActionIcon {...props}>
         <IconBrandGithub stroke={2} />
+      </ActionIcon>
+    ),
+  },
+  {
+    link: 'githubBook',
+    label: 'Github Book',
+    icon: (props: ActionIconProps) => (
+      <ActionIcon {...props}>
+        <IconBook stroke={2} />
       </ActionIcon>
     ),
   },

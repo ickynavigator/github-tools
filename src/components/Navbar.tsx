@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Anchor,
   Navbar,
   Text,
   createStyles,
@@ -85,6 +86,8 @@ const data = [
   },
 ];
 
+const GITHUB = 'https://github.com/ickynavigator/github-tools';
+
 const CustomNavbar = (props: Omit<NavbarProps, 'children'>) => {
   const { classes, cx } = useStyles();
   const [active, setActive] = useState('');
@@ -115,6 +118,11 @@ const CustomNavbar = (props: Omit<NavbarProps, 'children'>) => {
 
       <Navbar.Section className={classes.footer}>
         <Text align="center">Built with ❤️</Text>
+        <Text align="center">
+          <Anchor href={GITHUB} target="_blank">
+            SOURCE CODE
+          </Anchor>
+        </Text>
       </Navbar.Section>
     </Navbar>
   );

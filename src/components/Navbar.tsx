@@ -75,8 +75,8 @@ const useStyles = createStyles(theme => ({
 
 const data = [
   {
-    link: 'repoAddMembers',
-    label: 'Add Github Members',
+    link: 'repoAddCollaborators',
+    label: 'Add Github Collaborators',
     icon: (props: ActionIconProps) => (
       <ActionIcon {...props}>
         <IconBrandGithub stroke={2} />

@@ -27,7 +27,7 @@ const CustomHeader = (props: ICustomHeaderProps) => {
           />
         </MediaQuery>
 
-        <Title>HNGx Utils</Title>
+        <Title>Github Tools</Title>
       </div>
     </Header>
   );

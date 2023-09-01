@@ -2,6 +2,14 @@ import { Octokit } from '@octokit/rest';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '~/server/api/trpc';
 
+const SelectedRepo = z.string().refine(
+  value => {
+    const [owner, repo] = value.split('/');
+    return owner != undefined && repo != undefined;
+  },
+  { message: 'Invalid repository name' },
+);
+
 export const repoToolsRouter = createTRPCRouter({
   repoFetch: publicProcedure
     .input(z.object({ token: z.string() }))
@@ -22,7 +30,7 @@ export const repoToolsRouter = createTRPCRouter({
   addUsers: publicProcedure
     .input(
       z.object({
-        selectedRepo: z.string(),
+        selectedRepo: SelectedRepo,
         users: z.array(z.string()),
         token: z.string(),
         permission: z.string(),
@@ -67,8 +75,7 @@ export const repoToolsRouter = createTRPCRouter({
   fetchContents: publicProcedure
     .input(
       z.object({
-        owner: z.string(),
-        repo: z.string(),
+        selectedRepo: SelectedRepo,
         fileTypes: z.string().optional(),
         hideDirs: z.boolean().optional(),
         path: z.string().optional(),

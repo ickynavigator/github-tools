@@ -16,12 +16,18 @@ export const repoToolsRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const octokit = new Octokit({ auth: input.token });
 
-      let repos: string[] = [];
+      let repos: {
+        name: string;
+        default_branch: string;
+      }[] = [];
       const URL = 'GET /user/repos';
 
       for await (const response of octokit.paginate.iterator(URL)) {
         repos = repos.concat(
-          response.data.map(r => `${r.owner.login}/${r.name}`),
+          response.data.map(r => ({
+            name: `${r.owner.login}/${r.name}`,
+            default_branch: r.default_branch,
+          })),
         );
       }
 

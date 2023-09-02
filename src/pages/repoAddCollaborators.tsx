@@ -102,7 +102,7 @@ const Page = () => {
                 withAsterisk
                 label="Repository to update"
                 placeholder="Pick one"
-                data={repoFetch.data}
+                data={repoFetch.data.map(repo => repo.name)}
                 {...updateForm.getInputProps('selectedRepo')}
               />
               <Select

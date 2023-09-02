@@ -2,48 +2,48 @@ import {
   Alert,
   Button,
   Checkbox,
+  Code,
   Container,
   Group,
   Loader,
   Paper,
   ScrollArea,
-  SimpleGrid,
+  Select,
+  Stack,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { type NextPage } from 'next';
-import { useState } from 'react';
-import { api, type RouterInputs, type RouterOutputs } from '~/utils/api';
+import { useEffect } from 'react';
+import CustomError from '~/components/Error';
+import { api, type RouterInputs } from '~/utils/api';
 
-type FetchContentsType = {
-  out: RouterOutputs['repoTools']['fetchContents'];
-  in: RouterInputs['repoTools']['fetchContents'];
-};
+type BookFormValues = Omit<RouterInputs['repoTools']['fetchContents'], 'token'>;
 
 const Home: NextPage = () => {
-  const [dirs, setDirs] = useState<FetchContentsType['out']>();
-
   const fetchContentsMutate = api.repoTools.fetchContents.useMutation();
-
-  const form = useForm<FetchContentsType['in']>({
+  const repoFetch = api.repoTools.repoFetch.useMutation();
+  const form = useForm({
     initialValues: {
-      owner: 'ickynavigator',
-      repo: 'github-book',
+      token: '',
+    },
+  });
+
+  const bookForm = useForm<BookFormValues>({
+    initialValues: {
       path: '',
       hideDirs: true,
-      fileTypes: '',
+      selectedRepo: 'ickynavigator/github-book',
+      branch: '',
+      acceptableFileTypes: '',
     },
 
     validate: {
-      owner: value => {
-        if (!value) return 'Owner is required';
-      },
-      repo: value => {
-        if (!value) return 'Repository is required';
-      },
-      fileTypes: value => {
+      selectedRepo: value =>
+        value.length > 0 ? false : 'Please select a repository',
+      acceptableFileTypes: value => {
         if (!value) return null;
 
         const types = value.split(',').map(type => type.trim());
@@ -53,80 +53,106 @@ const Home: NextPage = () => {
     },
   });
 
-  const onSubmit = async (values: FetchContentsType['in']) => {
-    const res = await fetchContentsMutate.mutateAsync(values);
+  useEffect(() => {
+    if (repoFetch.data) {
+      const branch = repoFetch.data.find(
+        repo => repo.name === bookForm.values.selectedRepo,
+      )?.default_branch;
 
-    if (!fetchContentsMutate.isError) {
-      setDirs(res);
+      if (branch) {
+        bookForm.setFieldValue('branch', branch);
+      }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookForm.values.selectedRepo, repoFetch.data]);
 
   return (
     <Container py="xl">
-      <form
-        onSubmit={form.onSubmit(values => {
-          void onSubmit(values);
-        })}
-      >
-        <Title
-          order={2}
-          size="h1"
-          sx={theme => ({ fontFamily: `Greycliff CF, ${theme.fontFamily}` })}
-          weight={900}
-          align="center"
-        >
-          Dir List
-        </Title>
-        <SimpleGrid
-          cols={2}
-          mt="xl"
-          breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
-        >
-          <TextInput
-            withAsterisk
-            label="Owner"
-            placeholder="Enter github repository owner name"
-            {...form.getInputProps('owner')}
-          />
-          <TextInput
-            withAsterisk
-            label="Repository"
-            placeholder="Enter github repository name"
-            {...form.getInputProps('repo')}
-          />
-        </SimpleGrid>
-        <TextInput
-          mt="md"
-          label="Path"
-          placeholder="Enter base path"
-          {...form.getInputProps('path')}
-        />
-        <TextInput
-          mt="md"
-          label="File types (seperated by comma)"
-          placeholder=".md,.txt"
-          {...form.getInputProps('fileTypes')}
-        />
-        <Checkbox
-          mt="md"
-          label="Hide directories"
-          {...form.getInputProps('hideDirs', { type: 'checkbox' })}
-        />
-        <Group position="right" mt="md">
-          <Button type="submit" loading={fetchContentsMutate.isLoading}>
-            Submit
-          </Button>
-        </Group>
-      </form>
+      <Title>Dir List</Title>
+      <Stack>
+        <form onSubmit={form.onSubmit(values => repoFetch.mutate(values))}>
+          <Stack>
+            <TextInput
+              withAsterisk
+              label="Token"
+              placeholder="Github Token"
+              description={
+                <Text>
+                  Token should have <Code color="grape">repo</Code>
+                </Text>
+              }
+              {...form.getInputProps('token')}
+            />
+            <Group position="right">
+              <Button type="submit" loading={repoFetch.isLoading}>
+                Submit
+              </Button>
+            </Group>
+            {repoFetch.isError && (
+              <CustomError message={repoFetch.error.message} />
+            )}
+          </Stack>
+        </form>
+
+        {repoFetch.data != undefined && (
+          <form
+            onSubmit={bookForm.onSubmit(values =>
+              fetchContentsMutate.mutate({
+                ...values,
+                token: form.values.token,
+              }),
+            )}
+          >
+            <Stack>
+              <Select
+                withAsterisk
+                label="Repository to update"
+                placeholder="Pick one"
+                data={repoFetch.data.map(repo => repo.name)}
+                {...bookForm.getInputProps('selectedRepo')}
+              />
+              <TextInput
+                withAsterisk
+                label="Branch to fetch"
+                {...bookForm.getInputProps('branch')}
+              />
+              <TextInput
+                mt="md"
+                label="Path"
+                placeholder="Enter base path"
+                {...bookForm.getInputProps('path')}
+              />
+              <TextInput
+                mt="md"
+                label="File types (seperated by comma)"
+                placeholder=".md,.txt"
+                {...bookForm.getInputProps('acceptableFileTypes')}
+              />
+              <Checkbox
+                mt="md"
+                label="Hide directories"
+                {...bookForm.getInputProps('hideDirs', { type: 'checkbox' })}
+              />
+              <Group position="right" mt="md">
+                <Button type="submit" loading={fetchContentsMutate.isLoading}>
+                  Submit
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        )}
+      </Stack>
 
       <Paper shadow="xl" radius="md" p="xl" my="lg" withBorder>
         {fetchContentsMutate.isLoading ? (
           <Loader />
         ) : (
           <ScrollArea scrollHideDelay={500}>
-            {dirs && <pre>{JSON.stringify(dirs, null, 4)}</pre>}
+            {fetchContentsMutate.data && (
+              <pre>{JSON.stringify(fetchContentsMutate.data, null, 4)}</pre>
+            )}
 
-            {!dirs && !fetchContentsMutate.isError && (
+            {!fetchContentsMutate.data && !fetchContentsMutate.isError && (
               <Text align="center">NO DATA FOUND YET</Text>
             )}
 

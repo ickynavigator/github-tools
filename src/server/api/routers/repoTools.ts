@@ -82,9 +82,11 @@ export const repoToolsRouter = createTRPCRouter({
     .input(
       z.object({
         selectedRepo: SelectedRepo,
-        fileTypes: z.string().optional(),
+        token: z.string(),
+        acceptableFileTypes: z.string().optional(),
         hideDirs: z.boolean().optional(),
         path: z.string().optional(),
+        branch: z.string(),
       }),
     )
     .mutation(() => {
